@@ -19,5 +19,17 @@ context of the target process, enabling various capabilities and modifications.
 <h3> Preparing Projects </h3>
 
 <p style="text-align: justify"> 
-    First we need to start by compiling the Assembly project. Because we are externing the function we prepared with Assembly in the C project. We will compile this project and then convert it to dll.
+    You don't have to do much as I've arranged everything. Just run the following code with gcc:
+</p>
+
+```shell
+gcc -o injection main.c -L./dll -lexecution
+```
+
+<p>
+    This code will quickly compile the dll with the c project and give you a file called injection.exe.
+</p>
+
+<p>
+    If you don't have gcc in a Windows environment, you can download scoop by <a href="https://scoop.sh/">clicking here</a> and download gcc.
 </p>
