@@ -23,7 +23,7 @@ context of the target process, enabling various capabilities and modifications.
 </p>
 
 ```shell
-gcc -o injection main.c -L./dll -lexecution
+gcc -o injection .\main.c -L. -lexecution
 ```
 
 <p>
