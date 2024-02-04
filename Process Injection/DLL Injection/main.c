@@ -13,7 +13,7 @@ extern void _DllMainCRTStartup(HANDLE targetHandle, LPVOID rBuffer, LPTHREAD_STA
     DWORD PID; 
     LPVOID rBuffer; 
     HMODULE hKernel32; 
-    wchar_t dllPath[MAX_PATH] = L"C:\\Users\\eberk\\OneDrive\\Desktop\\c_projects\\try\\Process Injection\\DLL Injection\\dll\\beko.dll";
+    wchar_t dllPath[MAX_PATH] = L"C:\\path\\to\\dll";
     size_t dllSize = sizeof(dllPath);
 
 int main(int argc, char* argv[]) {
