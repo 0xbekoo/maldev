@@ -48,10 +48,10 @@ typedef struct _CLIENT_ID
 /* *** => FUNCTIONS <= *** */
 
 typedef NTSTATUS(NTAPI* fn_NtOpenProcess) (
-        OUT PHANDLE ProcessHandle,
-        IN ACCESS_MASK DesiredAccess,
-        IN POBJECT_ATTRIBUTES ObjectAttributes,
-        IN PCLIENT_ID ClientId OPTIONAL
+    OUT PHANDLE ProcessHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN PCLIENT_ID ClientId OPTIONAL
 );
 
 typedef NTSTATUS(NTAPI* fn_NtAllocateVirtualMemory) (
