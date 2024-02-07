@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 
     NTSTATUS openProcessStatus = ntOpenProcess(&hProcess, PROCESS_ALL_ACCESS, &objAttr, &CID);
     if (openProcessStatus != STATUS_SUCCESS) {
-        warn("Failed to open handle to Process! Error Code: 0x%lx", openProcessStatus);
+        warn("Failed to get handle to Process! Error Code: 0x%lx", openProcessStatus);
         goto _CLEAN;
     }
     okay("Got a handle for process!");
