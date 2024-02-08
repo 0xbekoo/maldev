@@ -22,7 +22,7 @@ gcc -o <project> <project.c> -L. -l<dllName (without .dll)>
 For example, if you want to compile and run the [**DLL Injection**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/DLL%20Injection) project, you need to run the following code:
 
 ```shell
-gcc -o injection injection.c -L. -lexecution
+gcc -o injection main.c -L. -lexecution
 ```
 
 In order to use the functions I created with assembly in C projects, I convert assembly projects into dlls and include them as libraries during compilation.
