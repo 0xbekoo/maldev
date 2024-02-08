@@ -7,6 +7,8 @@ This repo contains projects I have prepared for malware development. I am new to
 - `🟢` [**DLL Injection**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/DLL%20Injection)
 - `🛑` **Thread Hijacking**
 - `🟢` [**Using NTDLL**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/NTAPI%20Injection)
+    - `🟢` [Execute Payload with NTAPI](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/NTAPI%20Injection/Execute%20Payload%20with%20NTAPI)
+    - `🟢` [Execute DLL with NTAPI](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/NTAPI%20Injection/Execute%20DLL%20with%20NTAPI) 
 - `🛑` **Using Direct System Calls**
 
 ## `⚠️` WARNING!
