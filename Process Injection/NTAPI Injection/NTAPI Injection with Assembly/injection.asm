@@ -1,3 +1,15 @@
+/* ///  **********************************************************************  /// 
+
+
+@author:        @x1nerama (aka: bekoo)
+@website:       x1nerama.github.io
+@release-date:  02-23-2024
+@last-update:   02-23-2024 - 10.56 PM
+
+
+///  **********************************************************************  /// */
+
+
 includelib ".\lib\user32.lib"
 includelib ".\lib\kernel32.lib"
 
