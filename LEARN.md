@@ -1,3 +1,7 @@
+### Student: Berkay K. - x1nerama
+### Creation Date: 02.04.2024
+### Last Updated: 02.23.2024       
+
 ## Introduction 
 
 This repository contains projects that I developed while I was learning about malware development. It does not encourage illegality in any way, but is only prepared for people who are interested in this field to take a look at my projects. 
