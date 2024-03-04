@@ -4,14 +4,19 @@
 
 This repo contains projects I have prepared for malware development. I am new to malware development and I will add every project I make to this repo to improve myself. Projects in this repository:
 
-- `🟢` [**DLL Injection**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/DLL%20Injection)
-    - `🟢` [DLL Injection with Assembly](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/DLL%20Injection/DLL%20Injection%20with%20Assembly)
-    - `🟢` [DLL Injection with C/C++](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/DLL%20Injection/DLL%20Injection%20with%20C) 
-- `🟢` [**Using NTDLL**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/NTAPI%20Injection)
-    - `🟢` [NTAPI Injection with Assembly](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/NTAPI%20Injection/NTAPI%20Injection%20with%20Assembly)
-    - `🟢` [NTAPI Injection with C/C++](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/NTAPI%20Injection/NTAPI%20Injection%20with%20C) 
-- `🛑` **Using Direct System Calls**
-- `🛑` **Thread Hijacking**
+### ASM 
+- `🟢` [**Using Direct Syscalls with Assembly**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/ASM/Using%20Direct%20Syscalls%20with%20Assembly)
+- `🟢` [**NTAPI Injection with Assembly**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/ASM/NTAPI%20Injection%20with%20Assembly)
+- `🟢` [**DLL Injection with Assembly**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/ASM/DLL%20Injection%20with%20Assembly)
+
+### C/C++
+- `🟢` [**Using Direct Syscalls with C**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/C/Using%20Direct%20Syscall%20with%20C)
+- `🟢` [**NTAPI Injection with C**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/C/NTAPI%20Injection%20with%20C)
+  - [Execute DLL with NTAPI](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/C/NTAPI%20Injection%20with%20C/Execute%20DLL%20with%20NTAPI)
+  - [Execute Payload with NTAPI](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/C/NTAPI%20Injection%20with%20C/Execute%20Payload%20with%20NTAPI)
+- `🟢` [**DLL Injection with C**](https://github.com/x1nerama/maldev/tree/main/Process%20Injection/C/DLL%20Injection%20with%20C)
+
+
 ## `💻` NOTE
 
 In some projects you will also see Assembly projects. You can use the appropriate syntax below to run these projects:
