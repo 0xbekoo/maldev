@@ -21,7 +21,7 @@ DWORD GetSSN(HMODULE ModuleName, LPCSTR ProcName) {
 
 int main(int argc, char* argv[]) {
    CONST UCHAR shellcode[] = {
-    "\xDE",'\xAD','\xBE','\xEF'
+    '\xDE','\xAD','\xBE','\xEF'
    };
 
     HANDLE   hProcess            = NULL;
