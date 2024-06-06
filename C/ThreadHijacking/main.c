@@ -69,7 +69,11 @@ HANDLE FindThreadTID(DWORD TargetProcessPID) {
 }
 
 int main(int argc, char* argv[]) {
-	DWORD		PID = 15896;
+	if (argc < 2) {
+		printf("[-] .\\program.exe <PID>\n");
+		return -1;
+	}
+	DWORD		PID 		= atoi(argv[1]);
 	HANDLE		HandleProcess	= NULL;
 	HANDLE		HandleThread	= NULL;
 	LPVOID		PayloadAddress	= NULL;
