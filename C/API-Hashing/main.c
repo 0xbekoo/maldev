@@ -1,4 +1,4 @@
-﻿#include "utils.h"
+#include "utils.h"
 
 DWORD GetHash(char* ApiString) {
 	size_t	APILen	 = strnlen_s(ApiString, 50);
