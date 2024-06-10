@@ -1,14 +1,12 @@
-; ///  **********************************************************************  /// 
+; /*
 ;
+; > DLL Injection with MASM64 Assembly <
 ;
-; @ DLL Injection with ASSEMBLY (MASM64)
-; @author:        @x1nerama 
-; @website:       x1nerama.github.io
-; @release-date:  02-20-2024
-; @last-update:   06-03-2024 
+; @author: 0xCyberGenji
+; @website:0xCyberGenji.github.io
+; @warning: This project has been developed for educational purposes only. Its use in real scenarios is at one's own risk. 
 ;
-;
-; ///  **********************************************************************  /// 
+; */
 
 include utils.inc
 

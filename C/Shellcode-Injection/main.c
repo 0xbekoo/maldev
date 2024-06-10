@@ -2,8 +2,8 @@
 
 >* Shellcode Injection *<
 
-@author:  x1nerama (bekoo)
-@website: x1nerama.github.io
+@author:  0xCyberGenji 
+@website: 0xCyberGenji.github.io
 @warning: This project has been developed for educational purposes only. Its use in real scenarios is at one's own risk. 
 
 */

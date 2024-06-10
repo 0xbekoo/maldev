@@ -1,13 +1,12 @@
-; ///  **********************************************************************  /// 
+; /*
 ;
+; > NTAPI Injection with MASM64 Assembly <
 ;
-;@author:        @x1nerama (aka: bekoo)
-;@website:       x1nerama.github.io
-;@release-date:  02-23-2024
-;@last-update:   02-23-2024 - 10.56 PM
+; @author: 0xCyberGenji
+; @website:0xCyberGenji.github.io
+; @warning: This project has been developed for educational purposes only. Its use in real scenarios is at one's own risk. 
 ;
-;
-; ///  **********************************************************************  /// 
+; */
 
 
 includelib ".\lib\user32.lib"
