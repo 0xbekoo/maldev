@@ -1,6 +1,6 @@
 /*
 
->* Shellcode Injection with NTAPI *<
+>* NTAPI Injection with NTAPI *<
 
 @author:  0xCyberGenji 
 @website: 0xCyberGenji.github.io
