@@ -10,6 +10,7 @@ This repo contains projects I have prepared for malware development. I am new to
 - `🟢` [**DLL Injection**](https://github.com/x1nerama/maldev/tree/main/ASM/DLL%20Injection)
 
 ### C/C++
+- `🟢` [**API Hashing**](https://github.com/x1nerama/maldev/tree/main/C/API-Hashing)
 - `🟢` [**Threadhijacking**](https://github.com/x1nerama/maldev/tree/main/C/ThreadHijacking)
 - `🟢` [**Using Direct Syscalls**](https://github.com/x1nerama/maldev/tree/main/C/Direct-Syscall)
 - `🟢` [**NTAPI Injection**](https://github.com/x1nerama/maldev/tree/main/C/NTAPI-Injection)
