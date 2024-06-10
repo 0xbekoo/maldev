@@ -1,9 +1,9 @@
 ﻿#include "utils.h"
 
 DWORD GetHash(char* ApiString) {
-	size_t	APILen	  = strnlen_s(ApiString, 50);
-	DWORD	Hash	  = 0x75;
-	int		x		  = 0;
+	size_t	APILen	 = strnlen_s(ApiString, 50);
+	DWORD	Hash	 = 0x75;
+	int	x	 = 0;
 
 	do {
 		Hash += (Hash * 0xab19f29f + ApiString[x]) & 0xffffff;
@@ -21,21 +21,20 @@ PDWORD GetFunctionAddress(char* ApiLibrary, DWORD hash)
 		printf("Failed to Load Library! Error Code: 0x%lx\n", GetLastError());
 		return NULL;
 	}
-	PIMAGE_DOS_HEADER		DosHeader			 = (PIMAGE_DOS_HEADER)LibraryAddress;
-	PIMAGE_NT_HEADERS		ImageNTHeaders		 = (PIMAGE_NT_HEADERS)((DWORD_PTR)LibraryAddress + DosHeader->e_lfanew);
-	DWORD_PTR				ExportDirectory		 = ImageNTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+	PIMAGE_DOS_HEADER	DosHeader       = (PIMAGE_DOS_HEADER)LibraryAddress;
+	PIMAGE_NT_HEADERS	ImageNTHeaders	= (PIMAGE_NT_HEADERS)((DWORD_PTR)LibraryAddress + DosHeader->e_lfanew);
+	DWORD_PTR		ExportDirectory	= ImageNTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
 	PIMAGE_EXPORT_DIRECTORY ImageExportDirectory = (PIMAGE_EXPORT_DIRECTORY)((DWORD_PTR)LibraryAddress + ExportDirectory);
 
-	// Export edilmiş fonksiyonlarla ilgili bilgiler için RVA'ları al
-	PDWORD addresOfFunctionsRVA		= (PDWORD)((DWORD_PTR)LibraryAddress + ImageExportDirectory->AddressOfFunctions);
-	PDWORD addressOfNamesRVA		= (PDWORD)((DWORD_PTR)LibraryAddress + ImageExportDirectory->AddressOfNames);
+	PDWORD addresOfFunctionsRVA     = (PDWORD)((DWORD_PTR)LibraryAddress + ImageExportDirectory->AddressOfFunctions);
+	PDWORD addressOfNamesRVA        = (PDWORD)((DWORD_PTR)LibraryAddress + ImageExportDirectory->AddressOfNames);
 	PWORD  addressOfNameOrdinalsRVA = (PWORD)((DWORD_PTR)LibraryAddress + ImageExportDirectory->AddressOfNameOrdinals);
 
 	for (DWORD i = 0; i < ImageExportDirectory->NumberOfFunctions; i++)
 	{
-		DWORD	  functionNameRVA	 = addressOfNamesRVA[i];
-		DWORD_PTR functionNameVA	 = (DWORD_PTR)LibraryAddress + functionNameRVA;
-		char*	  functionName		 = (char*)functionNameVA;
+		DWORD	  functionNameRVA  = addressOfNamesRVA[i];
+		DWORD_PTR functionNameVA   = (DWORD_PTR)LibraryAddress + functionNameRVA;
+		char*	  functionName	   = (char*)functionNameVA;
 		DWORD_PTR functionAddressRVA = 0;
 
 		DWORD functionNameHash = GetHash(functionName);
@@ -51,8 +50,8 @@ PDWORD GetFunctionAddress(char* ApiLibrary, DWORD hash)
 }
  
 int main(int argc, char* argv[]) {
-	DWORD  ApiHash		   = 0;
-	DWORD  TID			   = 0;
+	DWORD  ApiHash	 = 0;
+	DWORD  TID	 = 0;
 	PDWORD FunctionAddress = NULL;
 
 	ApiHash = GetHash("MessageBoxA");
