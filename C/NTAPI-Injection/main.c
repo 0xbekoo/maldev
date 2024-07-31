@@ -1,12 +1,12 @@
 /*
+>* NTAPI Injection *<
 
->* NTAPI Injection with NTAPI *<
-
-@author:  0xCyberGenji 
-@website: 0xCyberGenji.github.io
+@author:  bekoo 
+@website: 0xbekoo.github.io
 @warning: This project has been developed for educational purposes only. Its use in real scenarios is at one's own risk. 
 
 */
+
 #include "utils.h"
 
 /*
