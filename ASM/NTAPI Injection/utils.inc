@@ -69,9 +69,9 @@ ReturnMain:
 CheckFunctionResult ENDP
 
 ExitProgram PROC
-    lea rdx,[NtCloseString]
-    mov rcx,NTDLLAddress 
-    call GetNTFunctionAddress
+	lea rdx,[NtCloseString]
+	mov rcx,NTDLLAddress 
+	call GetNTFunctionAddress
 	mov r14,rax 
 
 	mov rcx,[HandleProcess]
