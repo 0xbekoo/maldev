@@ -26,7 +26,7 @@ extern CloseHandle:PROC
 
 	HandleProcess           QWORD ? 
 	HandleThread			QWORD ?
-    RemoteBuffer			QWORD ?
+	RemoteBuffer			QWORD ?
 	LoadLibraryAddress      QWORD ?
 	Kernel32Address		    QWORD ?
 

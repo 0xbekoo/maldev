@@ -33,16 +33,16 @@ CLIENT_ID ENDS
     CID     CLIENT_ID           <>
 
 	
-    HandleProcess			QWORD ?
+	HandleProcess			QWORD ?
 	HandleThread			QWORD ?
 	RemoteBuffer			QWORD ?
 	LoadLibraryAddress		QWORD ?
-    NTDLLAddress			QWORD ?
+	NTDLLAddress			QWORD ?
 	KERNEL32Address			QWORD ?
 
 	; /* DLL's */
 	NTDLLString				db "ntdll.dll",0
-    KERNEL32String			db "kernel32.dll",0
+	KERNEL32String			db "kernel32.dll",0
 
 	; /* Functions */ 
 	LoadLibraryString		db "LoadLibraryA",0
