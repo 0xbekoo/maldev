@@ -61,11 +61,11 @@ mainCRTStartup PROC
     lea rdx,[LoadLibraryAddress]
     call CheckFunctionResult
 
-	lea rcx,[NTDLLString]
-	call GetModuleHandleA
-	lea rdx,[NTDLLAddress]
+    lea rcx,[NTDLLString]
+    call GetModuleHandleA
+    lea rdx,[NTDLLAddress]
     mov rcx,rax
-	call CheckFunctionResult
+    call CheckFunctionResult
 
     lea rdx,[NtOpenProcessString]
     mov rcx,NTDLLAddress

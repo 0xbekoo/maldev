@@ -25,7 +25,7 @@ extern CloseHandle:PROC
 	LoadLibraryStr	        db "LoadLibraryA",0
 
 	HandleProcess           QWORD ? 
-    HandleThread			QWORD ?
+	HandleThread			QWORD ?
     RemoteBuffer			QWORD ?
 	LoadLibraryAddress      QWORD ?
 	Kernel32Address		    QWORD ?

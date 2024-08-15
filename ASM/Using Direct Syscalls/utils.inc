@@ -29,7 +29,6 @@ CLIENT_ID STRUCT
 CLIENT_ID ENDS
 
 .data
-    PID     equ 0
     ObjAttr OBJECT_ATTRIBUTES   <> 
     CID     CLIENT_ID           <>
 
