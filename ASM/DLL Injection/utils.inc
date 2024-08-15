@@ -1,3 +1,13 @@
+; ╔═══════════════════════════════════════════════════════════╗
+; ║                                                           ║
+; ║                    ⚠️  WARNING!  ⚠️                      ║
+; ║                                                           ║
+; ║    Do not change the names or values of variables and     ║
+; ║    structures here unless necessary. If you do, edit      ║
+; ║    main.asm                                               ║
+; ║                                                           ║
+; ╚═══════════════════════════════════════════════════════════╝
+
 extern ExitProcess:PROC 
 extern GetModuleHandleA:PROC 
 extern LoadLibraryA:PROC
