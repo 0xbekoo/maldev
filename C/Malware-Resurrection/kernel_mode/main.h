@@ -24,6 +24,14 @@ NTSTATUS SetFolderPermissions(
     _In_ ACCESS_MASK CurrentAccessMask
 );
 
+NTSTATUS GetWindowsVersion(
+    _In_ ULONG* MajorVersion,
+    _In_ ULONG* MinorVersion,
+    _In_ ULONG* BuildNumber
+);
+
+ULONG GetActiveProcessLinkOffset();
+
 NTSTATUS HideProcess(
     _In_ HANDLE ProcessID
 );
@@ -36,12 +44,12 @@ NTSTATUS DriverEntry(
 );
 
 NTSTATUS UnloadDriver(
-	_In_ PDRIVER_OBJECT DriverObject
+    _In_ PDRIVER_OBJECT DriverObject
 );
 
 /*
 
-    All Structs From https://ntdoc.m417z.com/ 
+    All Structs From https://ntdoc.m417z.com/
 
 */
 
@@ -329,4 +337,4 @@ typedef NTSTATUS(NTAPI* fpRtlAddAccessDeniedAceEx)(
     _In_ ULONG AceFlags,
     _In_ ACCESS_MASK AccessMask,
     _In_ PSID Sid
-);
+    );

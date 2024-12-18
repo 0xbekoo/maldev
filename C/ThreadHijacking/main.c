@@ -1,11 +1,13 @@
 /*
->* Threadhijacking *<
-
-@author:  bekoo 
-@website: 0xbekoo.github.io
-@warning: This project has been developed for educational purposes only. Its use in real scenarios is at one's own risk. 
-
+ *
+ * @author: 0xbekoo
+ * @Project: Thread Hijacking
+ * @Last Update: 2024-07-31
+ *
+ * @Warning: This project is for educational purposes only. If you use this project for illegal purposes, it is your responsibility.
+ *
 */
+
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <WtsApi32.h>
