@@ -1,47 +1,37 @@
-; ╔═══════════════════════════════════════════════════════════╗
-; ║                                                           ║
-; ║                    ⚠️  WARNING!  ⚠️                      ║
-; ║                                                           ║
-; ║  The SSN numbers prepared for each NT Function will be    ║
-; ║  passed into eax by the GetSSN function before coming to  ║
-; ║  the corresponding function. See main.asm for details.    ║
-; ║                                                           ║
-; ╚═══════════════════════════════════════════════════════════╝
-
 .code
 
-NtOpenProcess PROC
+My_pNtOpenProcess PROC
 	mov r10,rcx
 	syscall
 	ret
-NtOpenProcess ENDP
+My_pNtOpenProcess ENDP
 
-NtAllocateVirtualMemory PROC
+My_pNtAllocateVirtualMemory PROC
 	mov r10,rcx
 	syscall
 	ret
-NtAllocateVirtualMemory ENDP
+My_pNtAllocateVirtualMemory ENDP
 
-NtWriteVirtualMemory PROC
+My_pNtWriteVirtualMemory PROC
 	mov r10,rcx
 	syscall 
 	ret
-NtWriteVirtualMemory ENDP
+My_pNtWriteVirtualMemory ENDP
 
-NtCreateThreadEx PROC
+My_pNtProtectVirtualMemory PROC
+	mov r10,rcx
+	syscall
+	ret
+My_pNtProtectVirtualMemory ENDP
+
+My_pNtCreateThreadEx PROC
 	mov r10,rcx
 	syscall 
 	ret
-NtCreateThreadEx ENDP
+My_pNtCreateThreadEx ENDP
 
-NtWaitForSingleObject PROC
+My_pNtWaitForSingleObject PROC
 	mov r10,rcx
 	syscall 
 	ret
-NtWaitForSingleObject ENDP
-
-NtClose PROC
-	mov r10,rcx
-	syscall 
-	ret
-NtClose ENDP 
+My_pNtWaitForSingleObject ENDP

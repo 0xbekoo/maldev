@@ -1,13 +1,3 @@
-; ╔═══════════════════════════════════════════════════════════╗
-; ║                                                           ║
-; ║                    ⚠️  WARNING!  ⚠️                      ║
-; ║                                                           ║
-; ║    Do not change the names or values of variables and     ║
-; ║    structures here unless necessary. If you do, edit      ║
-; ║    main.asm                                               ║
-; ║                                                           ║
-; ╚═══════════════════════════════════════════════════════════╝
-
 extern ExitProcess:PROC 
 extern GetModuleHandleA:PROC 
 extern LoadLibraryA:PROC
@@ -17,49 +7,90 @@ extern VirtualAllocEx:PROC
 extern WriteProcessMemory:PROC
 extern CreateRemoteThread:PROC 
 extern WaitForSingleObject:PROC
-extern CloseHandle:PROC  
+extern CloseHandle:PROC 
 
 
 .data
-	Kernel32Str		        db "kernel32.dll",0
-	LoadLibraryStr	        db "LoadLibraryA",0
+	Kernel32Str	db "kernel32.dll",0
+	LoadLibraryStr db "LoadLibraryA",0
 
-	HandleProcess           QWORD ? 
-	HandleThread			QWORD ?
-	RemoteBuffer			QWORD ?
-	LoadLibraryAddress      QWORD ?
-	Kernel32Address		    QWORD ?
+	HandleProcess QWORD ? 
+	HandleThread QWORD ?
+	RemoteBuffer QWORD ?
+	LoadLibraryAddress QWORD ?
+	Kernel32Address	QWORD ?
 
 .code
 
+; /*
+;   This function checks the result of a function call and handles errors. Also it can copy the result to a buffer.
+;
+;   * Parameters:
+;       * rcx - The result of the function call (QWORD)
+;       * rdx - The address of the buffer to store the result (QWORD) (OPTIONAL)
+; */
 CheckFunctionResult PROC
-	mov r15,[rsp]
-	cmp rcx,0
-	jz ExitProgram
+    mov r10,rcx
+    mov r11,rdx
 
-	cmp rdx,0
-	je ReturnToMain
-	mov [rdx],rcx
+    cmp r10,0
+    jz GotoExit 
+
+    cmp r11,0
+    jz ReturnToMain
+
+CopyBuffer:
+    ; Copy the result to the buffer
+    mov [r11],r10 
+    jmp ReturnToMain
+
+GotoExit:
+    mov rdx,HandleThread
+    mov rcx,HandleProcess
+    jmp ExitProgram
 
 ReturnToMain:
-	mov [rsp],r15
-	ret
+    ret
 CheckFunctionResult ENDP
 
+
+; /* 
+;	This function closes the handles and exits the program.
+;
+;	* Parameters: 
+;	    * rcx - Thread's handle  (QWORD)
+;	    * rdx - Process's handle (QWORD)
+; */
 ExitProgram PROC
-	mov rax,[HandleProcess]
-	cmp rax,0
-	je Exit
-	mov rcx,rax
-	call CloseHandle
+    sub rsp,38h
 
-	mov rax,[HandleThread]
-	cmp rax,0
-	je ExitProgram
-	mov rcx,rax
-	call CloseHandle
+    ; Save Params
+    mov r13,rcx
+    mov r14,rdx
 
-	Exit:
-	xor rcx,rcx
-	call ExitProcess
+CheckHandleThread:
+    cmp r13,0
+    jz CheckHandleProcess
+
+    jmp CloseThreadHandle
+
+CheckHandleProcess:
+    cmp r14,0
+    jz ExitTheProgram
+    
+    jmp CloseProcessHandle
+
+CloseThreadHandle:
+    mov rcx,r13
+    call CloseHandle
+
+    jmp CheckHandleProcess
+
+CloseProcessHandle:
+    mov rcx,r14
+    call CloseHandle
+
+ExitTheProgram:
+    xor rcx,rcx
+    call ExitProcess
 ExitProgram ENDP
