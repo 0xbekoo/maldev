@@ -15,9 +15,12 @@ The projects in this repository are organized into two categories: ASM and C/C++
 - `🟩` [**DLL Injection**](https://github.com/x1nerama/maldev/tree/main/ASM/DLL%20Injection)
 
 ### C/C++
+- `🟩` [**SSDT Hooking**](https://github.com/0xbekoo/maldev/tree/main/C/SSDT-Hooking)
+  - `🟩` [**Kernel-Mode Driver**](https://github.com/0xbekoo/maldev/blob/main/C/SSDT-Hooking/KernelMode/main.c)
+  - `🟩` [**User-Mode Program**](https://github.com/0xbekoo/maldev/blob/main/C/SSDT-Hooking/UserMode/main.c)
 - `🟩` [**Malware Resurrection**](https://github.com/0xbekoo/maldev/tree/main/C/Malware-Resurrection)
-  - `🟩` [**User-mode Program**](https://github.com/0xbekoo/maldev/tree/main/C/Malware-Resurrection/user_mode)
-  - `🟩` [**Kernel-mode Driver**](https://github.com/0xbekoo/maldev/tree/main/C/Malware-Resurrection/kernel_mode)
+  - `🟩` [**Kernel-Mode Driver**](https://github.com/0xbekoo/maldev/tree/main/C/Malware-Resurrection/kernel_mode)
+  - `🟩` [**User-Mode Program**](https://github.com/0xbekoo/maldev/tree/main/C/Malware-Resurrection/user_mode)
 - `🟩` [**File Icon Spoofing**](https://github.com/0xbekoo/maldev/tree/main/C/File-Icon-Spoofing)
 - `🟩` [**API Hashing**](https://github.com/x1nerama/maldev/tree/main/C/API-Hashing)
 - `🟩` [**Threadhijacking**](https://github.com/x1nerama/maldev/tree/main/C/ThreadHijacking)
